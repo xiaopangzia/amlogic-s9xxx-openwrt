@@ -1,7 +1,7 @@
 #============================================================================================
 # https://github.com/ophub/amlogic-s9xxx-openwrt
 # Description: Build OpenWrt with immortalwrt
-# Source code repository: https://github.com/immortalwrt/immortalwrt / Branch: openwrt-21.02
+# Source code repository: https://github.com/immortalwrt/immortalwrt / Branch: master
 #============================================================================================
 
 name: Build OpenWrt with immortalwrt
@@ -162,11 +162,11 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-21.02
-  FEEDS_CONF: config-openwrt/immortalwrt-21.02/feeds.conf.default
-  CONFIG_FILE: config-openwrt/immortalwrt-21.02/config
-  DIY_P1_SH: config-openwrt/immortalwrt-21.02/diy-part1.sh
-  DIY_P2_SH: config-openwrt/immortalwrt-21.02/diy-part2.sh
+  REPO_BRANCH: master
+  FEEDS_CONF: config-openwrt/immortalwrt-master/feeds.conf.default
+  CONFIG_FILE: config-openwrt/immortalwrt-master/config
+  DIY_P1_SH: config-openwrt/immortalwrt-master/diy-part1.sh
+  DIY_P2_SH: config-openwrt/immortalwrt-master/diy-part2.sh
   TZ: America/New_York
 
 jobs:
