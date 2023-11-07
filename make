@@ -98,9 +98,9 @@ specific_tags="${default_tags}"
 rk3588_kernel=("5.10.1")
 h6_kernel=("6.5.1")
 stable_kernel=("6.1.1" "5.15.1")
-flippy_kernel=(${stable_kernel[*]})
-dev_kernel=(${stable_kernel[*]})
-beta_kernel=(${stable_kernel[*]})
+flippy_kernel=(${stable_kernel[@]})
+dev_kernel=(${stable_kernel[@]})
+beta_kernel=(${stable_kernel[@]})
 # Set to automatically use the latest kernel
 auto_kernel="true"
 
@@ -113,14 +113,11 @@ root_mb="1024"
 # Set OpenWrt builder signature
 builder_name=""
 
-# Get gh_token for api.github.com
-gh_token=""
-
 # Set font color
 STEPS="[\033[95m STEPS \033[0m]"
 INFO="[\033[94m INFO \033[0m]"
 TIPS="[\033[93m TIPS \033[0m]"
-HINT="[\033[93m HINT \033[0m]"
+PROMPT="[\033[93m PROMPT \033[0m]"
 SUCCESS="[\033[92m SUCCESS \033[0m]"
 ERROR="[\033[91m ERROR \033[0m]"
 #
@@ -177,7 +174,7 @@ init_var() {
     echo -e "${STEPS} Start Initializing Variables..."
 
     # If it is followed by [ : ], it means that the option requires a parameter value
-    get_all_ver="$(getopt "b:r:u:k:a:s:n:g:" "${@}")"
+    get_all_ver="$(getopt "b:r:u:k:a:s:n:" "${@}")"
 
     while [[ -n "${1}" ]]; do
         case "${1}" in
@@ -243,14 +240,6 @@ init_var() {
                 error_msg "Invalid -n parameter [ ${2} ]!"
             fi
             ;;
-        -g | --Gh_token)
-            if [[ -n "${2}" ]]; then
-                gh_token="${2}"
-                shift
-            else
-                error_msg "Invalid -g parameter [ ${2} ]!"
-            fi
-            ;;
         *)
             error_msg "Invalid option [ ${1} ]!"
             ;;
@@ -285,7 +274,7 @@ check_data() {
         board_list=":($(echo ${make_board} | sed -e 's/_/\|/g')):(yes|no)"
         make_openwrt=($(echo ${make_board} | sed -e 's/_/ /g'))
     fi
-    [[ "${#make_openwrt[*]}" -eq "0" ]] && error_msg "The board is missing, stop making."
+    [[ "${#make_openwrt[@]}" -eq "0" ]] && error_msg "The board is missing, stop making."
 
     # Get a list of kernel
     kernel_from=($(
@@ -294,26 +283,26 @@ check_data() {
             grep -E "^[^#].*${board_list}$" | awk -F':' '{print $9}' |
             sort -u | xargs
     ))
-    [[ "${#kernel_from[*]}" -eq "0" ]] && error_msg "Missing [ KERNEL_TAGS ] settings, stop building."
+    [[ "${#kernel_from[@]}" -eq "0" ]] && error_msg "Missing [ KERNEL_TAGS ] settings, stop building."
     # Replace custom kernel tags
     [[ -n "${kernel_usage}" ]] && {
         specific_tags="${kernel_usage}"
-        kernel_from=(${kernel_from[*]//${default_tags}/${kernel_usage}})
+        kernel_from=(${kernel_from[@]//${default_tags}/${kernel_usage}})
     }
 
     # The [ specific kernel ], Use the [ kernel version number ], such as 5.15.y, 6.1.y, etc. download from [ kernel_stable ].
-    specific_kernel=($(echo ${kernel_from[*]} | sed -e 's/[ ][ ]*/\n/g' | grep -E "^[0-9]+" | sort -u | xargs))
+    specific_kernel=($(echo ${kernel_from[@]} | sed -e 's/[ ][ ]*/\n/g' | grep -E "^[0-9]+" | sort -u | xargs))
 
     # The [ suffix ] of KERNEL_TAGS starts with a [ letter ], such as kernel_stable, kernel_rk3588, etc.
-    tags_list=($(echo ${kernel_from[*]} | sed -e 's/[ ][ ]*/\n/g' | grep -E "^[a-z]" | sort -u | xargs))
+    tags_list=($(echo ${kernel_from[@]} | sed -e 's/[ ][ ]*/\n/g' | grep -E "^[a-z]" | sort -u | xargs))
     # Add the specific kernel to the list
-    [[ "${#specific_kernel[*]}" -ne "0" ]] && tags_list=(${tags_list[*]} "specific")
+    [[ "${#specific_kernel[@]}" -ne "0" ]] && tags_list=(${tags_list[@]} "specific")
     # Check the kernel list
-    [[ "${#tags_list[*]}" -eq "0" ]] && error_msg "The [ tags_list ] is missing, stop building."
+    [[ "${#tags_list[@]}" -eq "0" ]] && error_msg "The [ tags_list ] is missing, stop building."
 
     # Convert kernel repository address to api format
     [[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
-    kernel_api="https://api.github.com/repos/${kernel_repo}"
+    kernel_api="https://github.com/${kernel_repo}"
 }
 
 find_openwrt() {
@@ -395,19 +384,19 @@ query_kernel() {
 
     # Check the version on the kernel repository
     x="1"
-    for k in ${tags_list[*]}; do
+    for k in "${tags_list[@]}"; do
         {
             # Select the kernel list
             kd="${k}"
             case "${k}" in
-            stable) down_kernel_list=(${stable_kernel[*]}) ;;
-            flippy) down_kernel_list=(${flippy_kernel[*]}) ;;
-            dev) down_kernel_list=(${dev_kernel[*]}) ;;
-            beta) down_kernel_list=(${beta_kernel[*]}) ;;
-            rk3588) down_kernel_list=(${rk3588_kernel[*]}) ;;
-            h6) down_kernel_list=(${h6_kernel[*]}) ;;
+            stable) down_kernel_list=(${stable_kernel[@]}) ;;
+            flippy) down_kernel_list=(${flippy_kernel[@]}) ;;
+            dev) down_kernel_list=(${dev_kernel[@]}) ;;
+            beta) down_kernel_list=(${beta_kernel[@]}) ;;
+            rk3588) down_kernel_list=(${rk3588_kernel[@]}) ;;
+            h6) down_kernel_list=(${h6_kernel[@]}) ;;
             specific)
-                down_kernel_list=(${specific_kernel[*]})
+                down_kernel_list=(${specific_kernel[@]})
                 kd="${specific_tags}"
                 ;;
             *) error_msg "Invalid tags." ;;
@@ -416,24 +405,18 @@ query_kernel() {
             # Query the name of the latest kernel version
             tmp_arr_kernels=()
             i=1
-            for kernel_var in ${down_kernel_list[*]}; do
+            for kernel_var in "${down_kernel_list[@]}"; do
                 echo -e "${INFO} (${x}.${i}) Auto query the latest kernel version for [ ${k} - ${kernel_var} ]"
 
                 # Identify the kernel <VERSION> and <PATCHLEVEL>, such as [ 6.1 ]
                 kernel_verpatch="$(echo ${kernel_var} | awk -F '.' '{print $1"."$2}')"
 
-                # Set the token for api.github.com
-                [[ -n "${gh_token}" ]] && ght="-H \"Authorization: Bearer ${gh_token}\"" || ght=""
-
                 # Query the latest kernel version
                 latest_version="$(
-                    curl -s \
-                        -H "Accept: application/vnd.github+json" \
-                        ${ght} \
-                        ${kernel_api}/releases/tags/kernel_${kd} |
-                        jq -r '.assets[].name' |
-                        grep -oE "${kernel_verpatch}\.[0-9]+" |
-                        sort -rV | head -n 1
+                    curl -fsSL \
+                        ${kernel_api}/releases/expanded_assets/kernel_${kd} |
+                        grep -oE "${kernel_verpatch}.[0-9]+.tar.gz" | sed 's/.tar.gz//' |
+                        sort -urV | head -n 1
                 )"
 
                 if [[ "${?}" -eq "0" && -n "${latest_version}" ]]; then
@@ -449,14 +432,14 @@ query_kernel() {
 
             # Reset the kernel array to the latest kernel version
             case "${k}" in
-            stable) stable_kernel=(${tmp_arr_kernels[*]}) ;;
-            flippy) flippy_kernel=(${tmp_arr_kernels[*]}) ;;
-            dev) dev_kernel=(${tmp_arr_kernels[*]}) ;;
-            beta) beta_kernel=(${tmp_arr_kernels[*]}) ;;
-            rk3588) rk3588_kernel=(${tmp_arr_kernels[*]}) ;;
-            h6) h6_kernel=(${tmp_arr_kernels[*]}) ;;
+            stable) stable_kernel=(${tmp_arr_kernels[@]}) ;;
+            flippy) flippy_kernel=(${tmp_arr_kernels[@]}) ;;
+            dev) dev_kernel=(${tmp_arr_kernels[@]}) ;;
+            beta) beta_kernel=(${tmp_arr_kernels[@]}) ;;
+            rk3588) rk3588_kernel=(${tmp_arr_kernels[@]}) ;;
+            h6) h6_kernel=(${tmp_arr_kernels[@]}) ;;
             specific)
-                specific_kernel=(${tmp_arr_kernels[*]})
+                specific_kernel=(${tmp_arr_kernels[@]})
                 ;;
             *) error_msg "Invalid tags." ;;
             esac
@@ -469,7 +452,7 @@ query_kernel() {
 check_kernel() {
     [[ -n "${1}" ]] && check_path="${1}" || error_msg "Invalid kernel path to check."
     check_files=($(cat "${check_path}/sha256sums" | awk '{print $2}'))
-    for cf in ${check_files[*]}; do
+    for cf in "${check_files[@]}"; do
         {
             # Check if file exists
             [[ -s "${check_path}/${cf}" ]] || error_msg "The [ ${cf} ] file is missing."
@@ -479,7 +462,7 @@ check_kernel() {
             [[ "${tmp_sha256sum}" == "${tmp_checkcode}" ]] || error_msg "[ ${cf} ]: sha256sum verification failed."
         }
     done
-    echo -e "${INFO} All [ ${#check_files[*]} ] kernel files are sha256sum checked to be complete.\n"
+    echo -e "${INFO} All [ ${#check_files[@]} ] kernel files are sha256sum checked to be complete.\n"
 }
 
 download_kernel() {
@@ -487,19 +470,19 @@ download_kernel() {
     echo -e "${STEPS} Start downloading the kernel files..."
 
     x="1"
-    for k in ${tags_list[*]}; do
+    for k in "${tags_list[@]}"; do
         {
             # Set the kernel download list
             kd="${k}"
             case "${k}" in
-            stable) down_kernel_list=(${stable_kernel[*]}) ;;
-            flippy) down_kernel_list=(${flippy_kernel[*]}) ;;
-            dev) down_kernel_list=(${dev_kernel[*]}) ;;
-            beta) down_kernel_list=(${beta_kernel[*]}) ;;
-            rk3588) down_kernel_list=(${rk3588_kernel[*]}) ;;
-            h6) down_kernel_list=(${h6_kernel[*]}) ;;
+            stable) down_kernel_list=(${stable_kernel[@]}) ;;
+            flippy) down_kernel_list=(${flippy_kernel[@]}) ;;
+            dev) down_kernel_list=(${dev_kernel[@]}) ;;
+            beta) down_kernel_list=(${beta_kernel[@]}) ;;
+            rk3588) down_kernel_list=(${rk3588_kernel[@]}) ;;
+            h6) down_kernel_list=(${h6_kernel[@]}) ;;
             specific)
-                down_kernel_list=(${specific_kernel[*]})
+                down_kernel_list=(${specific_kernel[@]})
                 kd="${specific_tags}"
                 ;;
             *) error_msg "Invalid tags." ;;
@@ -507,7 +490,7 @@ download_kernel() {
 
             # Download the kernel to the storage directory
             i="1"
-            for kernel_var in ${down_kernel_list[*]}; do
+            for kernel_var in "${down_kernel_list[@]}"; do
                 if [[ ! -d "${kernel_path}/${kd}/${kernel_var}" ]]; then
                     kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kd}/${kernel_var}.tar.gz"
                     echo -e "${INFO} (${x}.${i}) [ ${k} - ${kernel_var} ] Kernel download from [ ${kernel_down_from} ]"
@@ -573,7 +556,7 @@ confirm_version() {
     [[ -n "${PLATFORM}" ]] || error_msg "Invalid PLATFORM parameter: [ ${PLATFORM} ]"
     # Set supported platform name
     support_platform=("amlogic" "rockchip" "allwinner")
-    [[ -n "$(echo "${support_platform[*]}" | grep -w "${PLATFORM}")" ]] || error_msg "[ ${PLATFORM} ] not supported."
+    [[ -n "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" ]] || error_msg "[ ${PLATFORM} ] not supported."
 
     # Replace custom kernel tags
     [[ -n "${kernel_usage}" && "${KERNEL_TAGS}" == "${default_tags}" ]] && KERNEL_TAGS="${kernel_usage}"
@@ -1068,7 +1051,7 @@ loop_make() {
     echo -e "${STEPS} Start making OpenWrt firmware..."
 
     j="1"
-    for b in ${make_openwrt[*]}; do
+    for b in "${make_openwrt[@]}"; do
         {
             # Set specific configuration for building OpenWrt system
             board="${b}"
@@ -1077,21 +1060,21 @@ loop_make() {
             # Determine kernel tags
             kd="${KERNEL_TAGS}"
             case "${KERNEL_TAGS}" in
-            stable) kernel_list=(${stable_kernel[*]}) ;;
-            flippy) kernel_list=(${flippy_kernel[*]}) ;;
-            dev) kernel_list=(${dev_kernel[*]}) ;;
-            beta) kernel_list=(${beta_kernel[*]}) ;;
-            rk3588) kernel_list=(${rk3588_kernel[*]}) ;;
-            h6) kernel_list=(${h6_kernel[*]}) ;;
+            stable) kernel_list=(${stable_kernel[@]}) ;;
+            flippy) kernel_list=(${flippy_kernel[@]}) ;;
+            dev) kernel_list=(${dev_kernel[@]}) ;;
+            beta) kernel_list=(${beta_kernel[@]}) ;;
+            rk3588) kernel_list=(${rk3588_kernel[@]}) ;;
+            h6) kernel_list=(${h6_kernel[@]}) ;;
             [0-9]*)
-                kernel_list=(${specific_kernel[*]})
+                kernel_list=(${specific_kernel[@]})
                 kd="${specific_tags}"
                 ;;
             *) error_msg "Invalid tags." ;;
             esac
 
             i="1"
-            for k in ${kernel_list[*]}; do
+            for k in "${kernel_list[@]}"; do
                 {
                     kernel="${k}"
 
@@ -1108,7 +1091,7 @@ loop_make() {
                     echo -ne "(${j}.${i}) Start making OpenWrt [\033[92m ${board} - ${kd}/${kernel} \033[0m]. "
                     now_remaining_space="$(df -Tk ${current_path} | grep '/dev/' | awk '{print $5}' | echo $(($(xargs) / 1024 / 1024)))"
                     if [[ "${now_remaining_space}" -le "3" ]]; then
-                        echo -e "${HINT} Remaining space is less than 3G, exit this build."
+                        echo -e "${PROMPT} Remaining space is less than 3G, exit this build."
                         break
                     else
                         echo "Remaining space is ${now_remaining_space}G."
@@ -1151,7 +1134,7 @@ download_depends
 download_kernel
 
 # Show make settings
-echo -e "${INFO} [ ${#make_openwrt[*]} ] lists of OpenWrt board: [ $(echo ${make_openwrt[*]} | xargs) ]"
+echo -e "${INFO} [ ${#make_openwrt[@]} ] lists of OpenWrt board: [ $(echo ${make_openwrt[@]} | xargs) ]"
 echo -e "${INFO} Kernel Repo: [ ${kernel_repo} ], Kernel Usage: [ ${kernel_usage} ] \n"
 # Show server start information
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${current_path}) \n"
