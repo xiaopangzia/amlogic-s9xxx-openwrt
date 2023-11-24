@@ -187,7 +187,7 @@ This repository provides a one-click manufacturing service. You just need to pas
 
 ## 5. Firmware Compilation
 
-The configuration information of the default system is recorded in the [/etc/model_database.conf](../openwrt-files/common-files/etc/model_database.conf) file, where the `BOARD` name is required to be unique.
+The configuration information of the default system is recorded in the [/etc/model_database.conf](../make-openwrt/openwrt-files/common-files/etc/model_database.conf) file, where the `BOARD` name is required to be unique.
 
 Among them, the parts of the box system that are packaged by default when the value of `BUILD` is `yes` can be used directly. Those that are not packaged by default when the value is `no` need to download the packaged system of the same `FAMILY` (recommended to download the system of kernel `5.15/5.4`), and after writing to the `USB`, the `boot partition` in the `USB` can be opened on the computer, and the `FDT dtb name` in the `/boot/uEnv.txt` file can be modified to adapt to other boxes in the list.
 
@@ -444,8 +444,9 @@ For more help, please check [packages](https://openwrt.org/packages/start)
 
 ### 10.8 How to restore the original Android TV system
 
-Usually use openwrt-ddbr for backup and recovery, or use Amlogic flashing tool to restore the original Android TV system.
+The Android TV system on the device is usually backed up and restored using `openwrt-ddbr`.
 
+In addition, the Android system can also be flashed into eMMC using the method of flashing via a cable. The download image of the Android system can be found in [Tools](https://github.com/ophub/kernel/releases/tag/tools).
 
 #### 10.8.1 Backup and Recovery Using openwrt-ddbr
 
