@@ -41,4 +41,4 @@ svn co https://github.com/ophub/luci-app-amlogic/trunk/luci-app-amlogic package/
 #
 # ------------------------------- Other ends -------------------------------
 git clone https://github.com/vernesong/OpenClash.git
-cp -r OpenClash/luci-app-openclash openwrt/package
+cp -r OpenClash/luci-app-openclash package/luci-app-openclash
